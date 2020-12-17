@@ -19,6 +19,7 @@ struct ContentView: View {
     
     @State private var showingFilterSheet = false
     @State private var processedImage: UIImage?
+    @State private var showingEmptyImageError = false
     
     let context = CIContext()
     
@@ -62,7 +63,9 @@ struct ContentView: View {
                     }
                     Spacer()
                     Button("Save") {
-                        guard let processedImage = self.processedImage else { return }
+                        guard let processedImage = self.processedImage else {
+                            self.showingEmptyImageError = true
+                            return }
                         let imageSaver = ImageSaver()
                         imageSaver.successHandler = {
                             print("Success!")
@@ -90,6 +93,9 @@ struct ContentView: View {
                     .default(Text("Vignette")) { self.setFilter(CIFilter.vignette()) },
                     .cancel()
                 ])
+            }
+            .alert(isPresented: $showingEmptyImageError) {
+                Alert(title: Text("Error when saving"), message: Text("The user has not selected an image to save"), dismissButton: .cancel())
             }
         }
     }
