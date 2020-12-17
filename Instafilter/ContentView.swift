@@ -18,50 +18,38 @@ import CoreImage.CIFilterBuiltins
  3. add an onAppear() modifier to load the actual image
  */
 
+class ImageSaver: NSObject {
+    func writeToPhotoAlbum(image: UIImage) {
+        UIImageWriteToSavedPhotosAlbum(image, self, #selector(saveError), nil)
+    }
+    @objc func saveError(_ image: UIImage, didFinishSavingWithError error: Error?, contextInfo: UnsafeRawPointer) {
+        print("Save finished!")
+    }
+}
+
 struct ContentView: View {
     @State private var image: Image?
+    @State private var inputImage: UIImage?
+    @State private var showingImagePicker = false
     
     var body: some View {
         VStack {
             image?
                 .resizable()
                 .scaledToFit()
+            Button("Select Image") {
+                self.showingImagePicker = true
+            }
+        }.sheet(isPresented: $showingImagePicker, onDismiss: loadImage){
+            ImagePicker(image: self.$inputImage)
         }
-        .onAppear(perform: loadImage)
     }
     
     func loadImage() {
-        /*
-         load example image into a UIImage with UIImage(named:) initializer, which will return an optional
-         then convert that into a CIImage which is what Core Image works with
-         */
-        guard let inputImage = UIImage(named: "Example") else { return }
-        let beginImage = CIImage(image: inputImage)
-        
-        let context = CIContext()
-        let currentFilter = CIFilter.sepiaTone()
-        
-        // set the filters inputImage and intensity
-        currentFilter.inputImage = beginImage
-        currentFilter.intensity = 1
-        
-        // get a CIImage from our filter
-        guard let outputImage: CIImage = currentFilter.outputImage else { return }
-        
-        // attempt to get a CGImage from our context, using our outputImage
-        if let cgimg: CGImage = context.createCGImage(outputImage, from: outputImage.extent) {
-            let uiImage = UIImage(cgImage: cgimg)
-            image = Image(uiImage: uiImage)
-        }
-        
-        /*
-         Easiest way to convert the filter's outputed image to a SwiftUI Image we can display is
-         1. Read the output image from our filter (which will be an optional CIImage)
-         2. Ask our context to create a CGImage from that output image(CIImage), this will give us an optional
-         3. Convert that optional CGImage into a UIImage
-         4. Finally, convert that UIImage into a SwiftUI Image
-         */
-        
+        guard let inputImage = inputImage else { return }
+        image = Image(uiImage: inputImage)
+        let imageSaver = ImageSaver()
+        imageSaver.writeToPhotoAlbum(image: inputImage)
     }
 }
 
