@@ -21,6 +21,10 @@ struct ContentView: View {
     @State private var processedImage: UIImage?
     @State private var showingEmptyImageError = false
     
+    var currentFilterTitle: String {
+        return self.currentFilter.name
+    }
+    
     let context = CIContext()
     
     var body: some View {
@@ -58,7 +62,7 @@ struct ContentView: View {
                 }.padding(.vertical)
                 
                 HStack {
-                    Button("Change Filter") {
+                    Button("Current Filter \(self.currentFilterTitle)") {
                         self.showingFilterSheet = true
                     }
                     Spacer()
